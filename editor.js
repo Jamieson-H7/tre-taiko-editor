@@ -1,6 +1,7 @@
 // GLOBAL VARIABLE DECLARATIONS
 const valueNames = ["empty", "small_do", "small_ka", "big_do", "big_ka"];
 const valueLocs = ["./assets/drums/empty.png", "./assets/drums/small_do.png", "./assets/drums/small_ka.png", "./assets/drums/big_do.png", "./assets/drums/big_ka.png", "./assets/drums/big_ka.png"];
+var zip = new JSZip();
 
 var buttons = [];
 var nodes = [];
@@ -495,23 +496,53 @@ function calculateStart(){
   }
 }
 
-function compileData(){
-  var output = ["BPM:" + bpm + "\n","#START\n"];
-  var offset = output.length;
-  for(let i = 0; i < beatlist.length; i++){
-    output[i + offset] = beatlist[i] + ",\n";
-  }
-  output[output.length] = "#END";
-  //return output;
-  blob = new Blob(output, {type: ".tja"});
-  link = document.createElement("a");
-  link.href = window.URL.createObjectURL(blob);
-  link.setAttribute("download", "output.tja");
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+function urlToPromise(url) {
+  return new Promise(function (resolve, reject) {
+      JSZipUtils.getBinaryContent(url, function (err, data) {
+          if (err) {
+              reject(err);
+          } else {
+              resolve(data);
+          }
+      });
+  });
 }
 
+function compileData(){
+  console.log("STARTING");
+  console.log(songInput.files[0]);
+  var output = "BPM:" + bpm + "\nWAVE: " + songInput.files[0]["name"] + "\n" + "#START\n";
+  for(let i = 0; i < beatlist.length; i++){
+    output += beatlist[i] + ",\n";
+  }
+  output += "#END";
+  console.log(output);
+  zipFolder = zip.folder(`${songTitle!="Upload Song:" ? songTitle : "output"} Folder`)
+  zipFolder.file(`${songTitle!="Upload Song:" ? songTitle : "output"}.tja`, output);
+  //zipFolder.file("Music", urlToPromise(url), { binary: true });
+  zip.generateAsync({type:"blob"}).then(function(content){
+    saveAs(content, "archive.zip")
+  })
+}
+
+//function compileData(){
+//  var output = ["BPM:" + bpm + "\n","#START\n"];
+//  var offset = output.length;
+//  for(let i = 0; i < beatlist.length; i++){
+//    output[i + offset] = beatlist[i] + ",\n";
+//  }
+//  output[output.length] = "#END";
+//  //return output;
+//  blob = new Blob(output, {type: ".tja"});
+//  link = document.createElement("a");
+//  link.href = window.URL.createObjectURL(blob);
+//  link.setAttribute("download", "output.tja");
+//  document.body.appendChild(link);
+//  link.click();
+//  link.remove();
+//}
+
 function taikoStats(){
+  download('http://.zip', 'test.zip');
   console.table({bpm: bpm, beatlist: beatlist, currentButton: currentButton, currentMeasure: currentMeasure, currentNode: currentNode});
 }
